@@ -1,0 +1,1019 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>محاكي عداد غايغر-مولر</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+:root {
+  /* Green theme (default) */
+  --bg: #080d08; --bg2: #0d140d; --bg3: #111a11;
+  --card: #0d150d; --screen: #061006;
+  --accent: #4ade80; --accent2: #22c55e; --accent3: #16a34a;
+  --accent-dim: #1a3a1a; --accent-dark: #0a1e0a;
+  --amber: #fb923c; --red: #f87171; --blue: #60a5fa;
+  --text: #e0ffe0; --text2: #6b9f6b; --text3: #3a5a3a;
+  --border: rgba(74,222,128,0.12); --border2: rgba(74,222,128,0.25);
+  --font: 'IBM Plex Sans Arabic', sans-serif;
+  --mono: 'IBM Plex Mono', monospace;
+  --grid-color: rgba(74,222,128,0.02);
+  --scanline: rgba(74,222,128,0.012);
+  --wave-color: #4ade80;
+  --wave-fill: rgba(74,222,128,0.07);
+}
+
+[data-theme="blue"] {
+  --bg: #07090f; --bg2: #0c1020; --bg3: #101828;
+  --card: #0b1220; --screen: #060910;
+  --accent: #60a5fa; --accent2: #3b82f6; --accent3: #1d4ed8;
+  --accent-dim: #1a2a4a; --accent-dark: #090f1e;
+  --text: #e0eeff; --text2: #5a7faf; --text3: #2a4a6a;
+  --border: rgba(96,165,250,0.12); --border2: rgba(96,165,250,0.25);
+  --grid-color: rgba(96,165,250,0.02);
+  --scanline: rgba(96,165,250,0.012);
+  --wave-color: #60a5fa;
+  --wave-fill: rgba(96,165,250,0.07);
+}
+
+[data-theme="amber"] {
+  --bg: #0f0a04; --bg2: #1a1005; --bg3: #221506;
+  --card: #1a1005; --screen: #100900;
+  --accent: #fb923c; --accent2: #f97316; --accent3: #c2410c;
+  --accent-dim: #3a1a08; --accent-dark: #1a0a02;
+  --text: #ffe0c8; --text2: #9f6b3a; --text3: #5a3a1a;
+  --border: rgba(251,146,60,0.12); --border2: rgba(251,146,60,0.25);
+  --grid-color: rgba(251,146,60,0.02);
+  --scanline: rgba(251,146,60,0.012);
+  --wave-color: #fb923c;
+  --wave-fill: rgba(251,146,60,0.07);
+}
+
+[data-theme="red"] {
+  --bg: #0f0505; --bg2: #1a0808; --bg3: #220b0b;
+  --card: #1a0808; --screen: #100404;
+  --accent: #f87171; --accent2: #ef4444; --accent3: #b91c1c;
+  --accent-dim: #3a1010; --accent-dark: #1a0404;
+  --text: #ffe0e0; --text2: #9f5a5a; --text3: #5a2a2a;
+  --border: rgba(248,113,113,0.12); --border2: rgba(248,113,113,0.25);
+  --grid-color: rgba(248,113,113,0.02);
+  --scanline: rgba(248,113,113,0.012);
+  --wave-color: #f87171;
+  --wave-fill: rgba(248,113,113,0.07);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: var(--font); min-height: 100vh; }
+body::before {
+  content: ''; position: fixed; inset: 0;
+  background-image: linear-gradient(var(--grid-color) 1px,transparent 1px),linear-gradient(90deg,var(--grid-color) 1px,transparent 1px);
+  background-size: 32px 32px; pointer-events: none; z-index: 0;
+}
+.container { max-width: 1160px; margin: 0 auto; padding: 1.5rem; position: relative; z-index: 1; }
+
+/* Header */
+.header { display:flex; align-items:center; justify-content:space-between; margin-bottom:1.5rem; flex-wrap:wrap; gap:1rem; padding-bottom:1rem; border-bottom:1px solid var(--border); }
+.logo { display:flex; align-items:center; gap:14px; }
+.logo-icon { width:50px; height:50px; background:var(--bg3); border:1px solid var(--border2); border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:26px; }
+.logo-text h1 { font-size:20px; font-weight:600; color:var(--accent); letter-spacing:-0.3px; font-family:var(--mono); }
+.logo-text p { font-size:11px; color:var(--text3); font-family:var(--mono); margin-top:2px; }
+.header-right { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+.header-badges { display:flex; gap:8px; flex-wrap:wrap; }
+.hbadge { font-size:10px; padding:4px 10px; border-radius:20px; font-family:var(--mono); border:1px solid; }
+.hbadge.g { border-color:var(--accent3); color:var(--accent); background:rgba(74,222,128,0.06); }
+.hbadge.a { border-color:#854F0B; color:var(--amber); background:rgba(251,146,60,0.06); }
+.hbadge.r { border-color:#A32D2D; color:var(--red); background:rgba(248,113,113,0.06); }
+
+/* Lang & Theme buttons */
+.top-controls { display:flex; gap:8px; align-items:center; }
+.lang-btn, .theme-dot { cursor:pointer; border:1px solid var(--border2); background:var(--bg3); color:var(--text); font-family:var(--mono); font-size:11px; padding:5px 12px; border-radius:8px; transition:all .15s; }
+.lang-btn:hover { border-color:var(--accent); color:var(--accent); }
+.lang-btn.active { background:rgba(74,222,128,0.1); border-color:var(--accent3); color:var(--accent); }
+.theme-dots { display:flex; gap:6px; align-items:center; }
+.theme-dot { width:22px; height:22px; border-radius:50%; padding:0; border:2px solid transparent; transition:all .15s; }
+.theme-dot:hover, .theme-dot.active { border-color: #fff; transform:scale(1.15); }
+.theme-dot[data-t="green"]  { background:#4ade80; }
+.theme-dot[data-t="blue"]   { background:#60a5fa; }
+.theme-dot[data-t="amber"]  { background:#fb923c; }
+.theme-dot[data-t="red"]    { background:#f87171; }
+
+/* Layout */
+.layout { display:grid; grid-template-columns:1fr 340px; gap:1.25rem; }
+@media (max-width:900px) { .layout { grid-template-columns:1fr; } }
+
+/* Geiger Screen */
+.gc-screen { background:var(--screen); border:1px solid var(--accent-dim); border-radius:16px; padding:1.25rem; margin-bottom:1.25rem; position:relative; overflow:hidden; }
+.gc-screen::before { content:''; position:absolute; inset:0; background:repeating-linear-gradient(0deg,var(--scanline) 0px,var(--scanline) 1px,transparent 1px,transparent 5px); pointer-events:none; }
+.gc-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1rem; }
+.gc-brand { font-family:var(--mono); font-size:10px; color:var(--text3); letter-spacing:3px; line-height:1.8; }
+.gc-status-row { display:flex; align-items:center; gap:8px; font-family:var(--mono); font-size:11px; }
+.led { width:10px; height:10px; border-radius:50%; background:var(--accent-dim); border:1px solid var(--accent3); flex-shrink:0; }
+.led.on { background:var(--accent); border-color:var(--accent); animation:led-pulse .5s infinite alternate; }
+.led.warn { background:var(--amber); border-color:var(--amber); animation:led-pulse .3s infinite alternate; }
+.led.danger { background:var(--red); border-color:var(--red); animation:led-pulse .2s infinite alternate; }
+@keyframes led-pulse { from{opacity:.5} to{opacity:1} }
+
+.gc-displays { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:1rem; }
+.gc-disp { background:var(--bg); border:1px solid var(--accent-dim); border-radius:8px; padding:.75rem 1rem; }
+.gc-disp-label { font-family:var(--mono); font-size:9px; color:var(--text3); letter-spacing:2px; margin-bottom:5px; }
+.gc-disp-val { font-family:var(--mono); font-size:28px; font-weight:500; color:var(--accent); line-height:1; }
+.gc-disp-val.sm { font-size:20px; }
+.gc-disp-unit { font-family:var(--mono); font-size:9px; color:var(--text3); margin-top:3px; }
+
+.level-section { margin-bottom:1rem; }
+.level-labels { display:flex; justify-content:space-between; font-family:var(--mono); font-size:9px; color:var(--text3); margin-bottom:4px; }
+.level-bar { height:10px; background:var(--bg); border:1px solid var(--accent-dim); border-radius:5px; overflow:hidden; }
+.level-fill { height:100%; border-radius:5px; width:0%; transition:width .2s, background .2s; background:var(--accent); }
+
+.waveform-box { background:var(--bg); border:1px solid var(--accent-dim); border-radius:8px; overflow:hidden; margin-bottom:1rem; height:72px; }
+canvas { display:block; }
+
+.gc-alert { background:var(--bg); border:1px solid var(--accent-dim); border-radius:8px; padding:.6rem 1rem; font-family:var(--mono); font-size:11px; color:var(--text3); display:flex; align-items:center; gap:8px; min-height:36px; transition:color .2s,border-color .2s; }
+.gc-alert.active { color:var(--accent); border-color:var(--accent3); }
+.gc-alert.warn { color:var(--amber); border-color:#854F0B; }
+.gc-alert.danger { color:var(--red); border-color:#A32D2D; animation:alert-flash .4s infinite; }
+@keyframes alert-flash { 0%,100%{opacity:1} 50%{opacity:.6} }
+
+/* Panels */
+.panel { background:var(--card); border:1px solid var(--border); border-radius:14px; padding:1.25rem; margin-bottom:1.25rem; }
+.panel-title { font-size:13px; font-weight:500; color:var(--accent); margin-bottom:1rem; display:flex; align-items:center; gap:8px; padding-bottom:.75rem; border-bottom:1px solid var(--border); font-family:var(--mono); }
+
+/* Controls */
+.ctrl-row { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:1rem; }
+.btn { display:inline-flex; align-items:center; gap:6px; padding:8px 16px; border-radius:8px; font-size:13px; cursor:pointer; border:1px solid var(--border2); background:var(--bg3); color:var(--text); font-family:var(--font); font-weight:500; transition:all .12s; }
+.btn:hover { background:var(--bg2); border-color:var(--accent3); }
+.btn:active { transform:scale(.97); }
+.btn.go { background:rgba(74,222,128,.12); border-color:var(--accent3); color:var(--accent); }
+.btn.go:hover { background:rgba(74,222,128,.2); }
+.btn.warn-btn { background:rgba(248,113,113,.08); border-color:#A32D2D; color:var(--red); }
+.btn.dl-btn { background:rgba(96,165,250,.08); border-color:#185FA5; color:#93c5fd; }
+
+.slider-row { display:flex; align-items:center; gap:12px; margin-bottom:.75rem; font-size:13px; color:var(--text2); }
+.slider-label { min-width:110px; font-size:12px; }
+input[type=range] { -webkit-appearance:none; flex:1; height:4px; background:var(--bg3); border-radius:4px; outline:none; cursor:pointer; border:1px solid var(--accent-dim); }
+input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:16px; height:16px; border-radius:50%; background:var(--accent); cursor:pointer; border:2px solid var(--bg); }
+.slider-val { font-family:var(--mono); font-size:12px; color:var(--accent); min-width:50px; text-align:left; }
+
+/* Elements grid */
+.elements-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(120px,1fr)); gap:8px; max-height:400px; overflow-y:auto; padding-right:4px; }
+.elements-grid::-webkit-scrollbar { width:4px; }
+.elements-grid::-webkit-scrollbar-track { background:var(--bg); }
+.elements-grid::-webkit-scrollbar-thumb { background:var(--accent-dim); border-radius:4px; }
+.el-card { background:var(--bg3); border:1px solid var(--border); border-radius:10px; padding:.75rem; cursor:pointer; transition:all .12s; }
+.el-card:hover { border-color:var(--accent3); background:var(--bg2); }
+.el-card.sel { border-color:var(--accent); background:rgba(74,222,128,.08); }
+.el-sym { font-family:var(--mono); font-size:18px; font-weight:500; color:var(--accent); line-height:1; }
+.el-name { font-size:11px; color:var(--text); margin:4px 0 2px; font-weight:500; }
+.el-sub { font-family:var(--mono); font-size:10px; color:var(--text3); }
+.el-badge { display:inline-block; font-size:9px; padding:2px 7px; border-radius:10px; margin-top:5px; font-family:var(--mono); border:1px solid; }
+.b-alpha { background:rgba(251,146,60,.1); color:#fb923c; border-color:#854F0B; }
+.b-beta  { background:rgba(96,165,250,.1); color:#93c5fd; border-color:#185FA5; }
+.b-gamma { background:rgba(248,113,113,.1); color:#fca5a5; border-color:#A32D2D; }
+.b-mixed { background:rgba(167,139,250,.1); color:#c4b5fd; border-color:#534AB7; }
+
+/* Info table */
+.info-table { width:100%; border-collapse:collapse; }
+.info-table td { padding:6px 0; border-bottom:1px solid var(--border); font-size:12px; }
+.info-table tr:last-child td { border-bottom:none; }
+.info-table .ik { color:var(--text3); font-family:var(--mono); font-size:10px; letter-spacing:1px; width:40%; }
+.info-table .iv { color:var(--text); font-family:var(--mono); font-size:11px; }
+
+/* Log */
+.log-box { background:var(--bg); border:1px solid var(--accent-dim); border-radius:8px; padding:.75rem; height:130px; overflow-y:auto; font-family:var(--mono); font-size:11px; color:var(--text3); line-height:1.9; }
+.log-box::-webkit-scrollbar { width:3px; }
+.log-box::-webkit-scrollbar-thumb { background:var(--accent-dim); }
+.log-n { color:var(--accent2); }
+.log-w { color:var(--amber); }
+.log-d { color:var(--red); }
+
+/* Stats */
+.stats-row { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:1rem; }
+.stat { background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:.6rem .75rem; text-align:center; }
+.stat-v { font-family:var(--mono); font-size:18px; font-weight:500; color:var(--accent); }
+.stat-l { font-size:10px; color:var(--text3); margin-top:2px; font-family:var(--mono); }
+
+/* Rad pills */
+.rad-types { display:flex; gap:6px; flex-wrap:wrap; margin-top:.75rem; }
+.rad-pill { font-size:10px; padding:3px 10px; border-radius:12px; font-family:var(--mono); border:1px solid; opacity:.4; transition:opacity .2s; }
+.rad-pill.active { opacity:1; }
+
+/* Side */
+.side { display:flex; flex-direction:column; }
+
+/* ── COMPARE MODE ── */
+.compare-section { display:none; }
+.compare-section.active { display:block; }
+.compare-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.cmp-panel { background:var(--bg); border:1px solid var(--border2); border-radius:12px; padding:1rem; }
+.cmp-title { font-family:var(--mono); font-size:11px; color:var(--accent); margin-bottom:.75rem; letter-spacing:1px; }
+.cmp-select { width:100%; background:var(--bg3); border:1px solid var(--border2); color:var(--text); font-family:var(--mono); font-size:12px; padding:6px 10px; border-radius:8px; outline:none; margin-bottom:.75rem; cursor:pointer; }
+.cmp-stat { display:flex; justify-content:space-between; align-items:center; padding:5px 0; border-bottom:1px solid var(--border); font-size:12px; }
+.cmp-stat:last-child { border-bottom:none; }
+.cmp-stat .ck { color:var(--text3); font-family:var(--mono); font-size:10px; }
+.cmp-stat .cv { font-family:var(--mono); font-size:12px; color:var(--text); }
+.cmp-bar-wrap { margin-top:10px; }
+.cmp-bar-row { display:flex; align-items:center; gap:8px; margin-bottom:6px; font-family:var(--mono); font-size:10px; color:var(--text3); }
+.cmp-bar-bg { flex:1; height:6px; background:var(--bg3); border-radius:4px; overflow:hidden; }
+.cmp-bar-fill { height:100%; border-radius:4px; transition:width .4s; }
+.cmp-bar-fill.a1 { background:var(--accent); }
+.cmp-bar-fill.a2 { background:var(--amber); }
+.cmp-winner { text-align:center; margin-top:12px; font-family:var(--mono); font-size:11px; padding:6px 12px; border-radius:8px; border:1px solid var(--border2); color:var(--accent); }
+
+/* Download panel */
+.dl-options { display:flex; gap:8px; flex-wrap:wrap; margin-top:.75rem; }
+.dl-opt { display:flex; align-items:center; gap:6px; font-size:12px; color:var(--text2); cursor:pointer; padding:4px 0; }
+.dl-opt input { accent-color:var(--accent); cursor:pointer; }
+
+/* Sound indicator */
+.sound-row { display:flex; align-items:center; gap:10px; font-size:12px; color:var(--text2); margin-top:.5rem; }
+.sound-icon { font-size:16px; }
+
+/* Footer */
+.footer { text-align:center; margin-top:1.5rem; padding-top:1rem; border-top:1px solid var(--border); font-family:var(--mono); font-size:10px; color:var(--text3); letter-spacing:1px; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="logo">
+      <div class="logo-icon">☢️</div>
+      <div class="logo-text">
+        <h1 id="appTitle">GEIGER-MÜLLER SIM</h1>
+        <p id="appSub">محاكي عداد غايغر-مولر النووي</p>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="header-badges">
+        <span class="hbadge g" id="badge1">إحصاء بواسون</span>
+        <span class="hbadge a" id="badge2">16 نظير</span>
+        <span class="hbadge r" id="badge3">قراءة فورية</span>
+      </div>
+      <div class="top-controls">
+        <!-- Language toggle -->
+        <div style="display:flex;gap:4px;">
+          <button class="lang-btn active" id="btnAr" onclick="setLang('ar')">AR</button>
+          <button class="lang-btn" id="btnEn" onclick="setLang('en')">EN</button>
+        </div>
+        <!-- Theme dots -->
+        <div class="theme-dots">
+          <span title="أخضر" class="theme-dot active" data-t="green" onclick="setTheme('green')"></span>
+          <span title="أزرق" class="theme-dot" data-t="blue" onclick="setTheme('blue')"></span>
+          <span title="عنبري" class="theme-dot" data-t="amber" onclick="setTheme('amber')"></span>
+          <span title="أحمر" class="theme-dot" data-t="red" onclick="setTheme('red')"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="layout">
+
+    <!-- Left column -->
+    <div>
+
+      <!-- Geiger Screen -->
+      <div class="gc-screen">
+        <div class="gc-header">
+          <div>
+            <div class="gc-brand">GEIGER-MÜLLER COUNTER</div>
+            <div class="gc-brand" style="font-size:9px;opacity:.5">MODEL GM-2000</div>
+          </div>
+          <div class="gc-status-row">
+            <div class="led" id="led"></div>
+            <span id="statusTxt" style="color:var(--text3);font-family:var(--mono);font-size:11px">STANDBY</span>
+          </div>
+        </div>
+
+        <div class="gc-displays">
+          <div class="gc-disp">
+            <div class="gc-disp-label" id="lCPM">معدل العدّ</div>
+            <div class="gc-disp-val" id="dCPM">0</div>
+            <div class="gc-disp-unit">CPM (counts/min)</div>
+          </div>
+          <div class="gc-disp">
+            <div class="gc-disp-label" id="lDose">معدل الجرعة</div>
+            <div class="gc-disp-val" id="dDose">0.000</div>
+            <div class="gc-disp-unit">μSv/h</div>
+          </div>
+          <div class="gc-disp">
+            <div class="gc-disp-label" id="lTotal">إجمالي العدّ</div>
+            <div class="gc-disp-val sm" id="dTotal">0</div>
+            <div class="gc-disp-unit" id="lAccum">متراكم</div>
+          </div>
+          <div class="gc-disp">
+            <div class="gc-disp-label" id="lTime">الوقت المنقضي</div>
+            <div class="gc-disp-val sm" id="dTime">00:00</div>
+            <div class="gc-disp-unit">mm:ss</div>
+          </div>
+        </div>
+
+        <div class="level-section">
+          <div class="level-labels">
+            <span id="lLevel">مستوى الإشعاع</span>
+            <span id="levelTxt">NORMAL</span>
+          </div>
+          <div class="level-bar">
+            <div class="level-fill" id="levelFill"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:8px;color:var(--text3);margin-top:3px">
+            <span>0</span><span>NORMAL</span><span>WARNING</span><span>DANGER</span><span>800 CPM</span>
+          </div>
+        </div>
+
+        <div class="waveform-box">
+          <canvas id="waveCanvas" width="800" height="72"></canvas>
+        </div>
+
+        <div class="gc-alert" id="alertBox">
+          <span style="font-size:14px">◉</span>
+          <span id="alertTxt">— الجهاز في وضع الاستعداد —</span>
+        </div>
+
+        <div class="rad-types">
+          <span class="rad-pill b-alpha" id="pillAlpha">α  ألفا</span>
+          <span class="rad-pill b-beta"  id="pillBeta">β  بيتا</span>
+          <span class="rad-pill b-gamma" id="pillGamma">γ  غاما</span>
+          <span class="rad-pill b-mixed" id="pillMixed">β+  بوزيترون</span>
+        </div>
+      </div>
+
+      <!-- Controls -->
+      <div class="panel">
+        <div class="panel-title">⚙ <span id="tControl">التحكم بالجهاز</span></div>
+
+        <div class="ctrl-row">
+          <button class="btn go" id="startBtn" onclick="toggleRun()">▶  <span id="btnStart">تشغيل</span></button>
+          <button class="btn" onclick="resetAll()">↺  <span id="btnReset">إعادة ضبط</span></button>
+          <button class="btn warn-btn" id="bgBtn" onclick="toggleBG()">～  <span id="btnBG">خلفية فقط</span></button>
+          <button class="btn" id="cmpBtn" onclick="toggleCompare()">⇌  <span id="btnCmp">مقارنة</span></button>
+        </div>
+
+        <!-- Sound toggle -->
+        <div class="sound-row">
+          <span class="sound-icon" id="soundIcon">🔊</span>
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+            <input type="checkbox" id="soundToggle" checked onchange="toggleSound()" style="accent-color:var(--accent);cursor:pointer;">
+            <span id="lSound">صوت التحذير عند الإشعاع العالي</span>
+          </label>
+        </div>
+
+        <div style="margin-top:.75rem;">
+          <div class="slider-row">
+            <span class="slider-label" id="lDist">المسافة من المصدر</span>
+            <input type="range" id="distSlider" min="1" max="150" value="5" step="1" oninput="onDist(this.value)">
+            <span class="slider-val" id="distVal">5 cm</span>
+          </div>
+          <div class="slider-row">
+            <span class="slider-label" id="lAct">نشاط المصدر</span>
+            <input type="range" id="actSlider" min="1" max="10" value="5" step="1" oninput="onAct(this.value)">
+            <span class="slider-val" id="actVal">× 5</span>
+          </div>
+          <div class="slider-row">
+            <span class="slider-label" id="lEff">كفاءة الكاشف</span>
+            <input type="range" id="effSlider" min="10" max="100" value="80" step="5" oninput="onEff(this.value)">
+            <span class="slider-val" id="effVal">80 %</span>
+          </div>
+        </div>
+
+        <div class="stats-row">
+          <div class="stat"><div class="stat-v" id="sCPS">0.00</div><div class="stat-l">CPS</div></div>
+          <div class="stat"><div class="stat-v" id="sSigma">—</div><div class="stat-l">σ (Poisson)</div></div>
+          <div class="stat"><div class="stat-v" id="sSnr">—</div><div class="stat-l">SNR</div></div>
+        </div>
+      </div>
+
+      <!-- Compare Mode -->
+      <div class="panel compare-section" id="comparePanel">
+        <div class="panel-title">⇌ <span id="tCompare">وضع المقارنة</span></div>
+        <div class="compare-grid">
+          <div class="cmp-panel">
+            <div class="cmp-title" id="lElem1">العنصر الأول</div>
+            <select class="cmp-select" id="cmpSel1" onchange="updateCompare()"></select>
+            <div id="cmpStats1"></div>
+          </div>
+          <div class="cmp-panel">
+            <div class="cmp-title" id="lElem2">العنصر الثاني</div>
+            <select class="cmp-select" id="cmpSel2" onchange="updateCompare()"></select>
+            <div id="cmpStats2"></div>
+          </div>
+        </div>
+        <div class="cmp-bar-wrap" id="cmpBars"></div>
+        <div class="cmp-winner" id="cmpWinner"></div>
+      </div>
+
+      <!-- Download -->
+      <div class="panel">
+        <div class="panel-title">⬇ <span id="tDownload">تحميل القراءات</span></div>
+        <div class="dl-options">
+          <label class="dl-opt"><input type="checkbox" id="dlChart" checked> <span id="lDlChart">مع الرسم البياني (PNG)</span></label>
+          <label class="dl-opt"><input type="checkbox" id="dlCSV" checked> <span id="lDlCSV">بيانات CSV</span></label>
+        </div>
+        <div class="ctrl-row" style="margin-top:.75rem;">
+          <button class="btn dl-btn" onclick="downloadReadings()">⬇  <span id="btnDl">تحميل القراءات</span></button>
+        </div>
+      </div>
+
+      <!-- Log -->
+      <div class="panel">
+        <div class="panel-title">📋 <span id="tLog">سجل الأحداث</span></div>
+        <div class="log-box" id="logBox"><span style="color:var(--text3)" id="logWait">في انتظار التشغيل...</span></div>
+      </div>
+
+    </div>
+
+    <!-- Right column -->
+    <div class="side">
+
+      <div class="panel">
+        <div class="panel-title">⚛  <span id="tElements">العناصر المشعة (16)</span></div>
+        <div class="elements-grid" id="elemGrid"></div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title">ℹ  <span id="tInfo">معلومات العنصر</span></div>
+        <table class="info-table">
+          <tr><td class="ik" id="ikName">الاسم</td><td class="iv" id="iName">—</td></tr>
+          <tr><td class="ik" id="ikSym">الرمز</td><td class="iv" id="iSym">—</td></tr>
+          <tr><td class="ik">Z</td><td class="iv" id="iZ">—</td></tr>
+          <tr><td class="ik" id="ikType">النوع</td><td class="iv" id="iType">—</td></tr>
+          <tr><td class="ik" id="ikHalf">عمر النصف</td><td class="iv" id="iHalf">—</td></tr>
+          <tr><td class="ik" id="ikEnergy">الطاقة</td><td class="iv" id="iEnergy">—</td></tr>
+          <tr><td class="ik" id="ikCPM">CPM مرجعي</td><td class="iv" id="iCPM">—</td></tr>
+          <tr><td class="ik" id="ikDose">معامل الجرعة</td><td class="iv" id="iDose">—</td></tr>
+          <tr><td class="ik" id="ikHazard">الخطورة</td><td class="iv" id="iHazard">—</td></tr>
+          <tr><td class="ik" id="ikUse">الاستخدام</td><td class="iv" id="iUse">—</td></tr>
+        </table>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="footer" id="footerTxt">
+    Geiger-Müller Counter Simulator · Model GM-2000
+  </div>
+</div>
+
+<script>
+/* ═══════════════════════════ DATA ═══════════════════════════ */
+const ELEMENTS = [
+  {sym:'Sr-90',  nameAr:'سترونشيوم-90',  nameEn:'Strontium-90',  Z:38, type:'beta',        halfLifeAr:'28.8 سنة',            halfLifeEn:'28.8 yr',        energy:'0.546 MeV', baseCPM:445, dose:0.0085, hazardAr:'متوسط ⚠',      hazardEn:'Medium ⚠',    hazardLv:2, useAr:'مصدر معايرة، أبحاث',             useEn:'Calibration, research'},
+  {sym:'Cs-137', nameAr:'سيزيوم-137',    nameEn:'Caesium-137',   Z:55, type:'gamma+beta',  halfLifeAr:'30.2 سنة',            halfLifeEn:'30.2 yr',        energy:'0.662 MeV', baseCPM:320, dose:0.012,  hazardAr:'عالٍ ⚠⚠',      hazardEn:'High ⚠⚠',     hazardLv:3, useAr:'معايرة، طب نووي',                useEn:'Calibration, nuclear medicine'},
+  {sym:'Co-60',  nameAr:'كوبالت-60',     nameEn:'Cobalt-60',     Z:27, type:'gamma',       halfLifeAr:'5.27 سنة',            halfLifeEn:'5.27 yr',        energy:'1.33 MeV',  baseCPM:680, dose:0.025,  hazardAr:'عالٍ جداً ⚠⚠⚠',hazardEn:'Very High ⚠⚠⚠',hazardLv:4, useAr:'علاج سرطان، تعقيم',              useEn:'Cancer therapy, sterilization'},
+  {sym:'Ra-226', nameAr:'راديوم-226',    nameEn:'Radium-226',    Z:88, type:'alpha+gamma', halfLifeAr:'1600 سنة',            halfLifeEn:'1600 yr',        energy:'4.87 MeV',  baseCPM:520, dose:0.035,  hazardAr:'خطير ⚠⚠⚠',     hazardEn:'Dangerous ⚠⚠⚠',hazardLv:4, useAr:'تاريخي، ساعات قديمة',            useEn:'Historical, old watches'},
+  {sym:'Am-241', nameAr:'أمريسيوم-241',  nameEn:'Americium-241', Z:95, type:'alpha',       halfLifeAr:'432 سنة',             halfLifeEn:'432 yr',         energy:'5.49 MeV',  baseCPM:180, dose:0.006,  hazardAr:'متوسط ⚠',      hazardEn:'Medium ⚠',    hazardLv:2, useAr:'كواشف الدخان',                  useEn:'Smoke detectors'},
+  {sym:'I-131',  nameAr:'يود-131',       nameEn:'Iodine-131',    Z:53, type:'beta+gamma',  halfLifeAr:'8.02 يوم',            halfLifeEn:'8.02 days',      energy:'0.606 MeV', baseCPM:290, dose:0.014,  hazardAr:'عالٍ ⚠⚠',      hazardEn:'High ⚠⚠',     hazardLv:3, useAr:'علاج الغدة الدرقية',             useEn:'Thyroid treatment'},
+  {sym:'U-238',  nameAr:'يورانيوم-238',  nameEn:'Uranium-238',   Z:92, type:'alpha',       halfLifeAr:'4.47 مليار سنة',      halfLifeEn:'4.47B yr',       energy:'4.27 MeV',  baseCPM:90,  dose:0.003,  hazardAr:'منخفض ✓',      hazardEn:'Low ✓',       hazardLv:1, useAr:'وقود نووي، أبحاث',               useEn:'Nuclear fuel, research'},
+  {sym:'Th-232', nameAr:'ثوريوم-232',    nameEn:'Thorium-232',   Z:90, type:'alpha',       halfLifeAr:'14 مليار سنة',        halfLifeEn:'14B yr',         energy:'4.01 MeV',  baseCPM:75,  dose:0.002,  hazardAr:'منخفض ✓',      hazardEn:'Low ✓',       hazardLv:1, useAr:'أبحاث، عناصر قديمة',             useEn:'Research, old materials'},
+  {sym:'Pu-239', nameAr:'بلوتونيوم-239', nameEn:'Plutonium-239', Z:94, type:'alpha',       halfLifeAr:'24100 سنة',           halfLifeEn:'24100 yr',       energy:'5.16 MeV',  baseCPM:210, dose:0.045,  hazardAr:'خطير جداً ☢',  hazardEn:'Extremely Dangerous ☢',hazardLv:4, useAr:'أسلحة، وقود مفاعلات',          useEn:'Weapons, reactor fuel'},
+  {sym:'P-32',   nameAr:'فوسفور-32',     nameEn:'Phosphorus-32', Z:15, type:'beta',        halfLifeAr:'14.3 يوم',            halfLifeEn:'14.3 days',      energy:'1.71 MeV',  baseCPM:560, dose:0.018,  hazardAr:'عالٍ ⚠⚠',      hazardEn:'High ⚠⚠',     hazardLv:3, useAr:'أبحاث بيولوجية',                useEn:'Biological research'},
+  {sym:'H-3',    nameAr:'تريتيوم-3',     nameEn:'Tritium-3',     Z:1,  type:'beta',        halfLifeAr:'12.3 سنة',            halfLifeEn:'12.3 yr',        energy:'0.019 MeV', baseCPM:15,  dose:0.001,  hazardAr:'منخفض ✓',      hazardEn:'Low ✓',       hazardLv:1, useAr:'ساعات مضيئة، أبحاث',            useEn:'Glow watches, research'},
+  {sym:'C-14',   nameAr:'كربون-14',      nameEn:'Carbon-14',     Z:6,  type:'beta',        halfLifeAr:'5730 سنة',            halfLifeEn:'5730 yr',        energy:'0.156 MeV', baseCPM:30,  dose:0.001,  hazardAr:'منخفض ✓',      hazardEn:'Low ✓',       hazardLv:1, useAr:'تأريخ راديوكربوني',              useEn:'Radiocarbon dating'},
+  {sym:'Tc-99m', nameAr:'تكنيتيوم-99م', nameEn:'Technetium-99m',Z:43, type:'gamma',       halfLifeAr:'6.01 ساعة',           halfLifeEn:'6.01 hr',        energy:'0.141 MeV', baseCPM:400, dose:0.008,  hazardAr:'متوسط ⚠',      hazardEn:'Medium ⚠',    hazardLv:2, useAr:'تصوير طبي (SPECT)',              useEn:'Medical imaging (SPECT)'},
+  {sym:'F-18',   nameAr:'فلور-18',       nameEn:'Fluorine-18',   Z:9,  type:'beta+',       halfLifeAr:'110 دقيقة',           halfLifeEn:'110 min',        energy:'0.634 MeV', baseCPM:480, dose:0.009,  hazardAr:'متوسط ⚠',      hazardEn:'Medium ⚠',    hazardLv:2, useAr:'تصوير PET/CT',                  useEn:'PET/CT imaging'},
+  {sym:'Kr-85',  nameAr:'كريبتون-85',    nameEn:'Krypton-85',    Z:36, type:'beta+gamma',  halfLifeAr:'10.7 سنة',            halfLifeEn:'10.7 yr',        energy:'0.514 MeV', baseCPM:200, dose:0.007,  hazardAr:'منخفض-متوسط',  hazardEn:'Low-Medium',  hazardLv:1, useAr:'كاشفات غاز، أبحاث',             useEn:'Gas detectors, research'},
+  {sym:'Na-22',  nameAr:'صوديوم-22',     nameEn:'Sodium-22',     Z:11, type:'gamma',       halfLifeAr:'2.60 سنة',            halfLifeEn:'2.60 yr',        energy:'1.27 MeV',  baseCPM:610, dose:0.022,  hazardAr:'عالٍ جداً ⚠⚠⚠',hazardEn:'Very High ⚠⚠⚠',hazardLv:4, useAr:'فيزياء جسيمات، معايرة',         useEn:'Particle physics, calibration'},
+  {sym:'BG',     nameAr:'خلفية إشعاعية', nameEn:'Background Rad',Z:0,  type:'mixed',       halfLifeAr:'طبيعي',               halfLifeEn:'Natural',        energy:'—',         baseCPM:10,  dose:0.0001, hazardAr:'طبيعي ✓',      hazardEn:'Natural ✓',   hazardLv:0, useAr:'قياس خلفية المختبر',             useEn:'Lab background measurement'},
+];
+
+const TYPE_LABEL = {
+  ar: { alpha:'ألفا α', beta:'بيتا β', gamma:'غاما γ', 'beta+':'بوزيترون β+', 'gamma+beta':'غاما + بيتا', 'alpha+gamma':'ألفا + غاما', mixed:'مختلط' },
+  en: { alpha:'Alpha α', beta:'Beta β', gamma:'Gamma γ', 'beta+':'Positron β+', 'gamma+beta':'Gamma + Beta', 'alpha+gamma':'Alpha + Gamma', mixed:'Mixed' }
+};
+const TYPE_CSS = { alpha:'b-alpha', beta:'b-beta', gamma:'b-gamma', 'beta+':'b-mixed', 'gamma+beta':'b-gamma', 'alpha+gamma':'b-alpha', mixed:'b-mixed' };
+const HAZARD_COLOR = ['#4ade80','#86efac','#fb923c','#f87171','#ff3333'];
+
+/* ═══════════════════════════ STATE ═══════════════════════════ */
+let lang = 'ar';
+let selIdx = 0, running = false, bgOnly = false;
+let totalCounts = 0, elapsed = 0, dist = 5, actMult = 5, eff = 80;
+let timer = null;
+let wave = new Array(200).fill(0);
+let wctx = null;
+let soundEnabled = true;
+let audioCtx = null;
+let compareOpen = false;
+let readingsLog = [];
+let lastCPM = 0;
+let noiseOscillator = null;
+let noiseGain = null;
+
+/* ═══════════════════════════ TRANSLATIONS ═══════════════════════════ */
+const T = {
+  ar: {
+    appTitle: 'GEIGER-MÜLLER SIM',
+    appSub: 'محاكي عداد غايغر-مولر النووي',
+    badge1: 'إحصاء بواسون', badge2: '16 نظير', badge3: 'قراءة فورية',
+    tControl: 'التحكم بالجهاز', tLog: 'سجل الأحداث',
+    tElements: 'العناصر المشعة (16)', tInfo: 'معلومات العنصر',
+    tDownload: 'تحميل القراءات', tCompare: 'وضع المقارنة',
+    btnStart: 'تشغيل', btnPause: 'إيقاف مؤقت',
+    btnReset: 'إعادة ضبط', btnBG: 'خلفية فقط', btnCmp: 'مقارنة',
+    btnDl: 'تحميل القراءات',
+    lCPM: 'معدل العدّ', lDose: 'معدل الجرعة', lTotal: 'إجمالي العدّ',
+    lTime: 'الوقت المنقضي', lAccum: 'متراكم', lLevel: 'مستوى الإشعاع',
+    lDist: 'المسافة من المصدر', lAct: 'نشاط المصدر', lEff: 'كفاءة الكاشف',
+    lSound: 'صوت التحذير عند الإشعاع العالي',
+    lDlChart: 'مع الرسم البياني (PNG)', lDlCSV: 'بيانات CSV',
+    lElem1: 'العنصر الأول', lElem2: 'العنصر الثاني',
+    ikName: 'الاسم', ikSym: 'الرمز', ikType: 'النوع',
+    ikHalf: 'عمر النصف', ikEnergy: 'الطاقة', ikCPM: 'CPM مرجعي',
+    ikDose: 'معامل الجرعة', ikHazard: 'الخطورة', ikUse: 'الاستخدام',
+    standby: 'الجهاز في وضع الاستعداد', paused: 'موقوف مؤقتاً',
+    logWait: 'في انتظار التشغيل...', logReset: 'تمت إعادة الضبط...',
+    logStart: '▶ بدء القياس — ', logStop: '⏸ تم الإيقاف المؤقت',
+    logSelect: 'اختيار: ', logBG: '～ وضع الخلفية الإشعاعية',
+    logSrc: '◉ العودة للمصدر: ',
+    warn: '! تنبيه: إشعاع فوق المعدل الطبيعي',
+    danger: '⚠ تحذير خطر! مستوى إشعاع مرتفع جداً',
+    active: '● قياس نشط: ',
+    cmpMaxDose: 'أعلى جرعة: ', cmpHigherCPM: 'CPM أعلى: ',
+    noData: 'لا توجد بيانات بعد — شغّل الجهاز أولاً',
+    dlDone: 'تم التحميل ✓',
+    footer: 'محاكي عداد غايغر-مولر · نموذج GM-2000',
+  },
+  en: {
+    appTitle: 'GEIGER-MÜLLER SIM',
+    appSub: 'Nuclear Radiation Counter Simulator',
+    badge1: 'Poisson Stats', badge2: '16 Isotopes', badge3: 'Real-Time CPM',
+    tControl: 'Device Controls', tLog: 'Event Log',
+    tElements: 'Radioactive Elements (16)', tInfo: 'Element Info',
+    tDownload: 'Download Readings', tCompare: 'Compare Mode',
+    btnStart: 'Start', btnPause: 'Pause',
+    btnReset: 'Reset', btnBG: 'Background Only', btnCmp: 'Compare',
+    btnDl: 'Download Readings',
+    lCPM: 'COUNT RATE', lDose: 'DOSE RATE', lTotal: 'TOTAL COUNTS',
+    lTime: 'ELAPSED TIME', lAccum: 'accumulated', lLevel: 'RADIATION LEVEL',
+    lDist: 'Source Distance', lAct: 'Source Activity', lEff: 'Detector Efficiency',
+    lSound: 'Alert sound for high radiation',
+    lDlChart: 'With chart (PNG)', lDlCSV: 'CSV data',
+    lElem1: 'Element 1', lElem2: 'Element 2',
+    ikName: 'NAME', ikSym: 'SYMBOL', ikType: 'TYPE',
+    ikHalf: 'HALF-LIFE', ikEnergy: 'ENERGY', ikCPM: 'REF CPM',
+    ikDose: 'DOSE FACTOR', ikHazard: 'HAZARD', ikUse: 'USE',
+    standby: '— Device in standby mode —', paused: '⏸ Paused',
+    logWait: 'Waiting to start...', logReset: 'Reset complete...',
+    logStart: '▶ Measurement started — ', logStop: '⏸ Paused',
+    logSelect: 'Selected: ', logBG: '～ Background radiation mode',
+    logSrc: '◉ Return to source: ',
+    warn: '! Warning: Radiation above normal level',
+    danger: '⚠ DANGER! Very high radiation level detected',
+    active: '● Active measurement: ',
+    cmpMaxDose: 'Higher dose: ', cmpHigherCPM: 'Higher CPM: ',
+    noData: 'No data yet — start the device first',
+    dlDone: 'Downloaded ✓',
+    footer: 'Geiger-Müller Counter Simulator · Model GM-2000',
+  }
+};
+
+/* ═══════════════════════════ LANG ═══════════════════════════ */
+function setLang(l) {
+  lang = l;
+  document.documentElement.lang = l;
+  document.documentElement.dir = l === 'ar' ? 'rtl' : 'ltr';
+  document.getElementById('btnAr').classList.toggle('active', l === 'ar');
+  document.getElementById('btnEn').classList.toggle('active', l === 'en');
+  applyLang();
+  buildGrid();
+  updateInfo();
+  if (compareOpen) updateCompare();
+}
+
+function t(key) { return (T[lang] && T[lang][key]) ? T[lang][key] : (T['ar'][key] || key); }
+
+function applyLang() {
+  const ids = ['appTitle','appSub','badge1','badge2','badge3','tControl','tLog',
+    'tElements','tInfo','tDownload','tCompare','btnStart','btnReset','btnBG','btnCmp',
+    'btnDl','lCPM','lDose','lTotal','lTime','lAccum','lLevel','lDist','lAct','lEff',
+    'lSound','lDlChart','lDlCSV','lElem1','lElem2','ikName','ikSym','ikType','ikHalf',
+    'ikEnergy','ikCPM','ikDose','ikHazard','ikUse','footerTxt'];
+  ids.forEach(id => { const el = document.getElementById(id); if(el) el.textContent = t(id); });
+  // Rad pills
+  if (lang === 'ar') {
+    document.getElementById('pillAlpha').textContent = 'α  ألفا';
+    document.getElementById('pillBeta').textContent  = 'β  بيتا';
+    document.getElementById('pillGamma').textContent = 'γ  غاما';
+    document.getElementById('pillMixed').textContent = 'β+  بوزيترون';
+  } else {
+    document.getElementById('pillAlpha').textContent = 'α  Alpha';
+    document.getElementById('pillBeta').textContent  = 'β  Beta';
+    document.getElementById('pillGamma').textContent = 'γ  Gamma';
+    document.getElementById('pillMixed').textContent = 'β+  Positron';
+  }
+  // standby alert
+  if (!running) {
+    document.getElementById('alertTxt').textContent = t('standby');
+    document.getElementById('logBox').innerHTML = '<span style="color:var(--text3)">' + t('logWait') + '</span>';
+  }
+}
+
+/* ═══════════════════════════ THEME ═══════════════════════════ */
+function setTheme(th) {
+  document.documentElement.removeAttribute('data-theme');
+  if (th !== 'green') document.documentElement.setAttribute('data-theme', th);
+  document.querySelectorAll('.theme-dot').forEach(d => d.classList.toggle('active', d.dataset.t === th));
+  // redraw wave with new color
+  setTimeout(drawWave, 50);
+}
+
+/* ═══════════════════════════ GRID ═══════════════════════════ */
+function buildGrid() {
+  const g = document.getElementById('elemGrid');
+  g.innerHTML = '';
+  ELEMENTS.forEach((el, i) => {
+    const d = document.createElement('div');
+    d.className = 'el-card' + (i === selIdx ? ' sel' : '');
+    d.id = 'ec' + i;
+    d.onclick = () => select(i);
+    const name = lang === 'en' ? el.nameEn : el.nameAr;
+    d.innerHTML = `<div class="el-sym">${el.sym}</div>
+      <div class="el-name">${name}</div>
+      <div class="el-sub">Z = ${el.Z || '—'}</div>
+      <span class="el-badge ${TYPE_CSS[el.type]}">${TYPE_LABEL[lang][el.type]}</span>`;
+    g.appendChild(d);
+  });
+  // populate compare selects
+  ['cmpSel1','cmpSel2'].forEach((sid, si) => {
+    const s = document.getElementById(sid);
+    if (!s) return;
+    const prevVal = s.value;
+    s.innerHTML = '';
+    ELEMENTS.forEach((el, i) => {
+      const o = document.createElement('option');
+      o.value = i;
+      o.textContent = el.sym + ' — ' + (lang === 'en' ? el.nameEn : el.nameAr);
+      s.appendChild(o);
+    });
+    s.value = prevVal || (si === 0 ? 0 : 1);
+  });
+}
+
+function select(i) {
+  document.querySelectorAll('.el-card').forEach(c => c.classList.remove('sel'));
+  document.getElementById('ec' + i).classList.add('sel');
+  selIdx = i;
+  updateInfo();
+  const el = ELEMENTS[i];
+  addLog(t('logSelect') + (lang==='en'?el.nameEn:el.nameAr) + ' (' + el.sym + ')', 'n');
+}
+
+function updateInfo() {
+  const el = ELEMENTS[selIdx];
+  document.getElementById('iName').textContent   = lang === 'en' ? el.nameEn : el.nameAr;
+  document.getElementById('iSym').textContent    = el.sym;
+  document.getElementById('iZ').textContent      = el.Z || '—';
+  document.getElementById('iType').textContent   = TYPE_LABEL[lang][el.type];
+  document.getElementById('iHalf').textContent   = lang === 'en' ? el.halfLifeEn : el.halfLifeAr;
+  document.getElementById('iEnergy').textContent = el.energy;
+  document.getElementById('iCPM').textContent    = el.baseCPM + ' CPM';
+  document.getElementById('iDose').textContent   = el.dose + ' μSv·min/count';
+  const hEl = document.getElementById('iHazard');
+  hEl.textContent = lang === 'en' ? el.hazardEn : el.hazardAr;
+  hEl.style.color = HAZARD_COLOR[el.hazardLv];
+  document.getElementById('iUse').textContent    = lang === 'en' ? el.useEn : el.useAr;
+  const tp = el.type;
+  document.getElementById('pillAlpha').classList.toggle('active', tp.includes('alpha'));
+  document.getElementById('pillBeta').classList.toggle('active',  tp.includes('beta') && !tp.includes('beta+'));
+  document.getElementById('pillGamma').classList.toggle('active', tp.includes('gamma'));
+  document.getElementById('pillMixed').classList.toggle('active', tp === 'beta+' || tp === 'mixed');
+}
+
+/* ═══════════════════════════ SIMULATION ═══════════════════════════ */
+function getCPM() {
+  const el = ELEMENTS[bgOnly ? 16 : selIdx];
+  if (bgOnly) return 10 + Math.random() * 5;
+  const dFactor = Math.min(1, Math.pow(5 / Math.max(1, dist), 2));
+  const aFactor = actMult / 5;
+  const eFactor = eff / 80;
+  return Math.max(10, el.baseCPM * dFactor * aFactor * eFactor + 10);
+}
+
+function poisson(lam) {
+  let L = Math.exp(-lam), k = 0, p = 1;
+  do { k++; p *= Math.random(); } while (p > L);
+  return k - 1;
+}
+
+function tick() {
+  if (!running) return;
+  elapsed++;
+  const cpm = getCPM();
+  lastCPM = cpm;
+  const cps = cpm / 60;
+  const counts = poisson(cps);
+  totalCounts += counts;
+
+  const mm = String(Math.floor(elapsed / 60)).padStart(2, '0');
+  const ss = String(elapsed % 60).padStart(2, '0');
+  const dose = (cpm * ELEMENTS[bgOnly ? 16 : selIdx].dose / 60).toFixed(4);
+  const sigma = Math.sqrt(totalCounts).toFixed(1);
+  const snr = totalCounts > 0 ? (totalCounts / Math.sqrt(totalCounts)).toFixed(1) : '—';
+
+  document.getElementById('dCPM').textContent   = Math.round(cpm);
+  document.getElementById('dDose').textContent  = dose;
+  document.getElementById('dTotal').textContent = totalCounts.toLocaleString();
+  document.getElementById('dTime').textContent  = mm + ':' + ss;
+  document.getElementById('sCPS').textContent   = cps.toFixed(2);
+  document.getElementById('sSigma').textContent = sigma;
+  document.getElementById('sSnr').textContent   = snr;
+
+  const pct = Math.min(100, (cpm / 800) * 100);
+  const fill = document.getElementById('levelFill');
+  fill.style.width = pct + '%';
+  fill.style.background = pct > 70 ? '#f87171' : pct > 40 ? '#fb923c' : 'var(--accent)';
+
+  const led = document.getElementById('led');
+  const st  = document.getElementById('statusTxt');
+  const ab  = document.getElementById('alertBox');
+  const at  = document.getElementById('alertTxt');
+  const lt  = document.getElementById('levelTxt');
+  const el  = ELEMENTS[bgOnly ? 16 : selIdx];
+
+  if (cpm > 500) {
+    led.className = 'led danger'; st.textContent = 'DANGER'; st.style.color = '#f87171';
+    ab.className = 'gc-alert danger'; at.textContent = t('danger');
+    lt.textContent = 'DANGER'; lt.style.color = '#f87171';
+    playNoise(true);
+  } else if (cpm > 200) {
+    led.className = 'led warn'; st.textContent = 'WARNING'; st.style.color = '#fb923c';
+    ab.className = 'gc-alert warn'; at.textContent = t('warn');
+    lt.textContent = 'WARNING'; lt.style.color = '#fb923c';
+    playNoise(false);
+  } else {
+    led.className = 'led on'; st.textContent = 'MEASURING'; st.style.color = 'var(--accent)';
+    ab.className = 'gc-alert active';
+    at.textContent = t('active') + el.sym + ' — ' + Math.round(cpm) + ' CPM';
+    lt.textContent = 'NORMAL'; lt.style.color = 'var(--accent)';
+    stopNoise();
+  }
+
+  wave.shift();
+  wave.push(counts * 25 + Math.random() * 4);
+  drawWave();
+
+  // store reading
+  readingsLog.push({ time: mm+':'+ss, cpm: Math.round(cpm), dose, total: totalCounts, element: el.sym });
+
+  if (elapsed % 10 === 0) {
+    const lvl = cpm > 500 ? 'd' : cpm > 200 ? 'w' : 'n';
+    addLog(`[${mm}:${ss}] ${el.sym} — ${Math.round(cpm)} CPM | ${dose} μSv/h | Σ=${totalCounts}`, lvl);
+  }
+}
+
+/* ═══════════════════════════ WAVE ═══════════════════════════ */
+function drawWave() {
+  if (!wctx) {
+    const c = document.getElementById('waveCanvas');
+    c.width = c.parentElement.offsetWidth || 700;
+    c.height = 72;
+    wctx = c.getContext('2d');
+  }
+  const ctx = wctx, W = ctx.canvas.width, H = 72;
+  ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--screen').trim() || '#061006';
+  ctx.fillRect(0, 0, W, H);
+  const waveColor = getComputedStyle(document.documentElement).getPropertyValue('--wave-color').trim() || '#4ade80';
+  ctx.strokeStyle = 'rgba(74,222,128,0.04)'; ctx.lineWidth = 1;
+  for (let y = 0; y < H; y += 8) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
+  ctx.strokeStyle = 'rgba(74,222,128,0.15)'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(0, H-2); ctx.lineTo(W, H-2); ctx.stroke();
+  const step = W / wave.length;
+  ctx.beginPath();
+  ctx.strokeStyle = waveColor; ctx.lineWidth = 1.5;
+  wave.forEach((v, i) => {
+    const x = i * step, y = Math.max(2, H - 2 - Math.min(H - 6, v));
+    i === 0 ? ctx.moveTo(x, H-2) : (v > 3 ? ctx.lineTo(x, y) : ctx.lineTo(x, H-2));
+  });
+  ctx.stroke();
+  ctx.beginPath();
+  wave.forEach((v, i) => {
+    const x = i * step, y = Math.max(2, H - 2 - Math.min(H - 6, v));
+    i === 0 ? ctx.moveTo(x, H-2) : ctx.lineTo(x, v > 3 ? y : H-2);
+  });
+  ctx.lineTo(W, H-2);
+  ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--wave-fill').trim() || 'rgba(74,222,128,0.07)';
+  ctx.fill();
+}
+
+/* ═══════════════════════════ SOUND ═══════════════════════════ */
+function initAudio() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+}
+
+function playNoise(isDanger) {
+  if (!soundEnabled) return;
+  initAudio();
+  if (noiseOscillator) return;
+  try {
+    noiseGain = audioCtx.createGain();
+    noiseGain.gain.value = isDanger ? 0.06 : 0.03;
+    noiseGain.connect(audioCtx.destination);
+    // White noise via script processor
+    const bufferSize = 2048;
+    const node = audioCtx.createScriptProcessor(bufferSize, 1, 1);
+    node.onaudioprocess = (e) => {
+      const output = e.outputBuffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) output[i] = (Math.random() * 2 - 1);
+    };
+    // High-pass filter to make it crackly
+    const hpf = audioCtx.createBiquadFilter();
+    hpf.type = 'highpass';
+    hpf.frequency.value = isDanger ? 2000 : 800;
+    node.connect(hpf);
+    hpf.connect(noiseGain);
+    noiseOscillator = node;
+    // Auto stop after 1.5s
+    setTimeout(stopNoise, 1500);
+  } catch(e) {}
+}
+
+function stopNoise() {
+  if (noiseOscillator) {
+    try { noiseOscillator.disconnect(); } catch(e) {}
+    noiseOscillator = null;
+  }
+  if (noiseGain) {
+    try { noiseGain.disconnect(); } catch(e) {}
+    noiseGain = null;
+  }
+}
+
+function toggleSound() {
+  soundEnabled = document.getElementById('soundToggle').checked;
+  document.getElementById('soundIcon').textContent = soundEnabled ? '🔊' : '🔇';
+  if (!soundEnabled) stopNoise();
+}
+
+/* ═══════════════════════════ CONTROLS ═══════════════════════════ */
+function toggleRun() {
+  running = !running;
+  const btn = document.getElementById('startBtn');
+  if (running) {
+    initAudio();
+    btn.innerHTML = '⏸  <span id="btnStart">' + t('btnPause') + '</span>';
+    btn.classList.add('go');
+    addLog(t('logStart') + (lang==='en'?ELEMENTS[selIdx].nameEn:ELEMENTS[selIdx].nameAr), 'n');
+    timer = setInterval(tick, 1000);
+  } else {
+    btn.innerHTML = '▶  <span id="btnStart">' + t('btnStart') + '</span>';
+    clearInterval(timer);
+    stopNoise();
+    document.getElementById('led').className = 'led';
+    document.getElementById('statusTxt').textContent = 'PAUSED';
+    document.getElementById('statusTxt').style.color = '#fb923c';
+    document.getElementById('alertBox').className = 'gc-alert warn';
+    document.getElementById('alertTxt').textContent = t('paused');
+    addLog(t('logStop'), 'w');
+  }
+}
+
+function toggleBG() {
+  bgOnly = !bgOnly;
+  const btn = document.getElementById('bgBtn');
+  btn.style.background  = bgOnly ? 'rgba(96,165,250,.12)' : '';
+  btn.style.borderColor = bgOnly ? '#185FA5' : '';
+  btn.style.color       = bgOnly ? '#93c5fd' : '';
+  addLog(bgOnly ? t('logBG') : t('logSrc') + ELEMENTS[selIdx].sym, 'n');
+}
+
+function resetAll() {
+  running = false; clearInterval(timer); stopNoise();
+  totalCounts = 0; elapsed = 0; bgOnly = false;
+  wave = new Array(200).fill(0); readingsLog = []; lastCPM = 0;
+  document.getElementById('startBtn').innerHTML = '▶  <span id="btnStart">' + t('btnStart') + '</span>';
+  document.getElementById('startBtn').classList.remove('go');
+  document.getElementById('bgBtn').style.cssText = '';
+  document.getElementById('led').className = 'led';
+  document.getElementById('statusTxt').textContent = 'STANDBY';
+  document.getElementById('statusTxt').style.color = 'var(--text3)';
+  ['dCPM','dDose','dTotal','dTime','sCPS'].forEach(id => {
+    document.getElementById(id).textContent = id === 'dTime' ? '00:00' : id === 'dDose' ? '0.000' : id === 'sCPS' ? '0.00' : '0';
+  });
+  document.getElementById('sSigma').textContent = '—';
+  document.getElementById('sSnr').textContent   = '—';
+  document.getElementById('levelFill').style.width = '0%';
+  document.getElementById('levelTxt').textContent = 'NORMAL';
+  document.getElementById('levelTxt').style.color = '';
+  document.getElementById('alertBox').className = 'gc-alert';
+  document.getElementById('alertTxt').textContent = t('standby');
+  document.getElementById('logBox').innerHTML = '<span style="color:var(--text3)">' + t('logReset') + '</span>';
+  drawWave();
+}
+
+function onDist(v) { dist = parseInt(v); document.getElementById('distVal').textContent = v + ' cm'; }
+function onAct(v)  { actMult = parseInt(v); document.getElementById('actVal').textContent = '× ' + v; }
+function onEff(v)  { eff = parseInt(v); document.getElementById('effVal').textContent = v + ' %'; }
+
+function addLog(msg, lvl) {
+  const box = document.getElementById('logBox');
+  if (box.querySelector('span')) box.innerHTML = '';
+  const d = document.createElement('div');
+  d.className = lvl === 'w' ? 'log-w' : lvl === 'd' ? 'log-d' : 'log-n';
+  d.textContent = msg;
+  box.appendChild(d);
+  box.scrollTop = box.scrollHeight;
+  if (box.children.length > 40) box.removeChild(box.firstChild);
+}
+
+/* ═══════════════════════════ COMPARE ═══════════════════════════ */
+function toggleCompare() {
+  compareOpen = !compareOpen;
+  document.getElementById('comparePanel').classList.toggle('active', compareOpen);
+  if (compareOpen) updateCompare();
+}
+
+function updateCompare() {
+  const i1 = parseInt(document.getElementById('cmpSel1').value);
+  const i2 = parseInt(document.getElementById('cmpSel2').value);
+  const e1 = ELEMENTS[i1], e2 = ELEMENTS[i2];
+
+  function renderStats(id, el) {
+    const box = document.getElementById(id);
+    box.innerHTML = `
+      <div class="cmp-stat"><span class="ck">CPM</span><span class="cv">${el.baseCPM}</span></div>
+      <div class="cmp-stat"><span class="ck">${lang==='ar'?'الجرعة':'Dose'}</span><span class="cv">${el.dose} μSv</span></div>
+      <div class="cmp-stat"><span class="ck">${lang==='ar'?'عمر النصف':'Half-life'}</span><span class="cv">${lang==='ar'?el.halfLifeAr:el.halfLifeEn}</span></div>
+      <div class="cmp-stat"><span class="ck">${lang==='ar'?'الطاقة':'Energy'}</span><span class="cv">${el.energy}</span></div>
+      <div class="cmp-stat"><span class="ck">${lang==='ar'?'الخطورة':'Hazard'}</span><span class="cv" style="color:${HAZARD_COLOR[el.hazardLv]}">${lang==='ar'?el.hazardAr:el.hazardEn}</span></div>`;
+  }
+  renderStats('cmpStats1', e1);
+  renderStats('cmpStats2', e2);
+
+  const maxCPM = Math.max(e1.baseCPM, e2.baseCPM) || 1;
+  const maxDose = Math.max(e1.dose, e2.dose) || 1;
+  document.getElementById('cmpBars').innerHTML = `
+    <div style="margin-bottom:8px;font-family:var(--mono);font-size:10px;color:var(--text3);">
+      ${lang==='ar'?'مقارنة CPM':'CPM Comparison'}
+    </div>
+    <div class="cmp-bar-row"><span style="min-width:60px">${e1.sym}</span><div class="cmp-bar-bg"><div class="cmp-bar-fill a1" style="width:${(e1.baseCPM/maxCPM*100).toFixed(0)}%"></div></div><span>${e1.baseCPM}</span></div>
+    <div class="cmp-bar-row"><span style="min-width:60px">${e2.sym}</span><div class="cmp-bar-bg"><div class="cmp-bar-fill a2" style="width:${(e2.baseCPM/maxCPM*100).toFixed(0)}%"></div></div><span>${e2.baseCPM}</span></div>
+    <div style="margin:8px 0 4px;font-family:var(--mono);font-size:10px;color:var(--text3);">
+      ${lang==='ar'?'مقارنة الجرعة':'Dose Comparison'}
+    </div>
+    <div class="cmp-bar-row"><span style="min-width:60px">${e1.sym}</span><div class="cmp-bar-bg"><div class="cmp-bar-fill a1" style="width:${(e1.dose/maxDose*100).toFixed(0)}%"></div></div><span>${e1.dose}</span></div>
+    <div class="cmp-bar-row"><span style="min-width:60px">${e2.sym}</span><div class="cmp-bar-bg"><div class="cmp-bar-fill a2" style="width:${(e2.dose/maxDose*100).toFixed(0)}%"></div></div><span>${e2.dose}</span></div>`;
+
+  const winner = e1.dose > e2.dose ? e1 : e2;
+  const winnerName = lang === 'ar' ? winner.nameAr : winner.nameEn;
+  document.getElementById('cmpWinner').textContent = t('cmpMaxDose') + winner.sym + ' (' + winnerName + ')';
+}
+
+/* ═══════════════════════════ DOWNLOAD ═══════════════════════════ */
+function downloadReadings() {
+  if (readingsLog.length === 0) { alert(t('noData')); return; }
+  const withChart = document.getElementById('dlChart').checked;
+  const withCSV   = document.getElementById('dlCSV').checked;
+
+  if (withCSV) {
+    const header = lang === 'ar'
+      ? 'الوقت,CPM,الجرعة (μSv/h),الإجمالي,العنصر\n'
+      : 'Time,CPM,Dose (μSv/h),Total,Element\n';
+    const rows = readingsLog.map(r => `${r.time},${r.cpm},${r.dose},${r.total},${r.element}`).join('\n');
+    const blob = new Blob(['\uFEFF' + header + rows], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url;
+    a.download = 'geiger_readings.csv'; a.click(); URL.revokeObjectURL(url);
+  }
+
+  if (withChart) {
+    const cvs = document.createElement('canvas');
+    cvs.width = 800; cvs.height = 300;
+    const ctx = cvs.getContext('2d');
+    ctx.fillStyle = '#080d08'; ctx.fillRect(0, 0, 800, 300);
+    ctx.strokeStyle = 'rgba(74,222,128,0.1)'; ctx.lineWidth = 1;
+    for (let x = 0; x < 800; x += 40) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,300); ctx.stroke(); }
+    for (let y = 0; y < 300; y += 40) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(800,y); ctx.stroke(); }
+    // chart title
+    ctx.fillStyle = '#4ade80'; ctx.font = '12px monospace';
+    ctx.fillText('CPM — ' + ELEMENTS[selIdx].sym, 10, 20);
+    // plot
+    const recent = readingsLog.slice(-100);
+    const maxV = Math.max(...recent.map(r => r.cpm), 10);
+    ctx.beginPath(); ctx.strokeStyle = '#4ade80'; ctx.lineWidth = 2;
+    recent.forEach((r, i) => {
+      const x = (i / (recent.length - 1)) * 760 + 20;
+      const y = 270 - (r.cpm / maxV) * 240;
+      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    });
+    ctx.stroke();
+    // axis labels
+    ctx.fillStyle = '#3a5a3a'; ctx.font = '10px monospace';
+    ctx.fillText('0', 5, 270); ctx.fillText(maxV, 5, 30);
+    ctx.fillText(recent[0]?.time || '', 15, 290);
+    ctx.fillText(recent[recent.length-1]?.time || '', 740, 290);
+    const url = cvs.toDataURL('image/png');
+    const a = document.createElement('a'); a.href = url;
+    a.download = 'geiger_chart.png'; a.click();
+  }
+
+  addLog(t('dlDone'), 'n');
+}
+
+/* ═══════════════════════════ INIT ═══════════════════════════ */
+buildGrid();
+updateInfo();
+applyLang();
+setTimeout(drawWave, 100);
+</script>
+</body>
+</html>
